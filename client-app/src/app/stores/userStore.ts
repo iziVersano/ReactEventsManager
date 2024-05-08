@@ -6,6 +6,7 @@ import { store } from "./store";
 
 export default class UserStore {
     user: User | null = null;
+    users: User[] = [];
 
     constructor() {
         makeAutoObservable(this)
@@ -39,7 +40,6 @@ export default class UserStore {
         }
     }
 
-
     logout = () => {
         store.commonStore.setToken(null);
         this.user = null;
@@ -54,6 +54,20 @@ export default class UserStore {
             console.log(error);
         }
     }
+
+    getAllUsers = async () => {
+        try {
+            const users = await agent.Users.list();
+            console.log("Fetched users:", users); // Add this line
+            runInAction(() => {
+                this.users = users || []; // Set to empty array if users is null or undefined
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    
+    
 
     setImage = (image: string) => {
         if (this.user) this.user.image = image;

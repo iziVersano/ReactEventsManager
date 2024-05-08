@@ -6,10 +6,23 @@ namespace Persistence
     public class Seed
     {
         public static async Task SeedData(DataContext context,
-            UserManager<AppUser> userManager)
+            UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
         {
+            // Check if any users or activities exist in the database
             if (!userManager.Users.Any() && !context.Activities.Any())
             {
+                // Create roles if they don't exist
+                if (!await roleManager.RoleExistsAsync("Admin"))
+                {
+                    await roleManager.CreateAsync(new IdentityRole("Admin"));
+                }
+
+                if (!await roleManager.RoleExistsAsync("User"))
+                {
+                    await roleManager.CreateAsync(new IdentityRole("User"));
+                }
+
+                // Create users
                 var users = new List<AppUser>
                 {
                     new AppUser
@@ -32,10 +45,31 @@ namespace Persistence
                     },
                 };
 
+                // Add users to their respective roles
                 foreach (var user in users)
                 {
                     await userManager.CreateAsync(user, "Pa$$w0rd");
+                    await userManager.AddToRoleAsync(user, "User"); // Assign all users the "User" role
                 }
+
+                // Assign the first user the "Admin" role
+                var adminUser = users.FirstOrDefault(u => u.UserName == "bob");
+                if (adminUser != null)
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                }
+
+                // Add cities and activities
+                var cities = new List<City>
+                {
+                    new City { Name = "New York" },
+                    new City { Name = "Los Angeles" },
+                    new City { Name = "Chicago" },
+                    new City { Name = "Houston" },
+                    new City { Name = "Phoenix" },
+                    // Add more cities as needed
+                };
+                await context.Cities.AddRangeAsync(cities);
 
                 var activities = new List<Activity>
                 {

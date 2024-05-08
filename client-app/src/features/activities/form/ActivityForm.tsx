@@ -13,14 +13,17 @@ import MySelectInput from '../../../app/common/form/MySelectInput';
 import { categoryOptions } from '../../../app/common/options/categoryOptions';
 import MyDateInput from '../../../app/common/form/MyDateInput';
 import { ActivityFormValues } from '../../../app/models/activity';
+import { City } from '../../../app/models/city';
 
 export default observer(function ActivityForm() {
-    const { activityStore } = useStore();
+    const { activityStore, cityStore } = useStore();
     const { createActivity, updateActivity, loadActivity, loadingInitial } = activityStore;
     const { id } = useParams();
     const navigate = useNavigate();
 
     const [activity, setActivity] = useState<ActivityFormValues>(new ActivityFormValues());
+    const [cities, setCities] = useState<{ text: string; value: string }[]>([]);
+
 
     const validationSchema = Yup.object({
         title: Yup.string().required('The event title is required'),
@@ -33,7 +36,19 @@ export default observer(function ActivityForm() {
 
     useEffect(() => {
         if (id) loadActivity(id).then(activity => setActivity(new ActivityFormValues(activity)))
-    }, [id, loadActivity])
+    }, [id, loadActivity]);
+
+  
+    useEffect(() => {
+        cityStore.loadCities().then(() => {
+            const cityOptions = cityStore.cities.map(city => ({
+                text: city.name, // Use city name for text
+                value: city.name // Use city id or any other unique identifier for value
+            }));
+            setCities(cityOptions);
+        });
+    }, [cityStore]);
+    
 
     function handleFormSubmit(activity: ActivityFormValues) {
         if (!activity.id) {
@@ -51,7 +66,7 @@ export default observer(function ActivityForm() {
 
     return (
         <Segment clearing>
-            <Header content='Activity Details' sub color='teal' />
+            <Header content='Activity Details 6' sub color='teal' />
             <Formik
                 enableReinitialize
                 validationSchema={validationSchema}
@@ -66,7 +81,8 @@ export default observer(function ActivityForm() {
 
                         <Header content='Location Details' sub color='teal' />
                         <MyTextInput name='venue' placeholder='Venue' />
-                        <MyTextInput name='city' placeholder='city' />
+                       
+                        <MySelectInput options={cities} name='city' placeholder='Select City' />
                         <Button 
                             disabled={isSubmitting || !dirty || !isValid}
                             loading={isSubmitting} 

@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { Activity, ActivityFormValues } from '../models/activity';
 import { PaginatedResult } from '../models/pagination';
 import { Photo, Profile, UserActivity } from '../models/profile';
+import { City, CityFormValues } from '../models/city';
 import { User, UserFormValues } from '../models/user';
 import { router } from '../router/Routes';
 import { store } from '../stores/store';
@@ -13,7 +14,7 @@ const sleep = (delay: number) => {
     })
 }
 
-axios.defaults.baseURL = process.env.REACT_APP_API_URL;
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
 const responseBody = <T>(response: AxiosResponse<T>) => response.data;
 
@@ -24,7 +25,7 @@ axios.interceptors.request.use(config => {
 })
 
 axios.interceptors.response.use(async response => {
-    if (process.env.NODE_ENV === 'development') await sleep(1000);
+    if (import.meta.env.DEV) await sleep(1000);
     const pagination = response.headers['pagination'];
     if (pagination) {
         response.data = new PaginatedResult(response.data, JSON.parse(pagination));
@@ -87,7 +88,8 @@ const Activities = {
 const Account = {
     current: () => requests.get<User>('account'),
     login: (user: UserFormValues) => requests.post<User>('/account/login', user),
-    register: (user: UserFormValues) => requests.post<User>('/account/register', user)
+    register: (user: UserFormValues) => requests.post<User>('/account/register', user),
+    getAllUsers: () => requests.get<User[]>('/account/users')
 }
 
 const Profiles = {
@@ -109,10 +111,20 @@ const Profiles = {
         requests.get<UserActivity[]>(`/profiles/${username}/activities?predicate=${predicate}`)
 }
 
+const Cities = {
+    list: () => requests.get<string[]>('/cities'),
+    create: (city: CityFormValues) => requests.post<void>('/cities', city),
+};
+
+
 const agent = {
     Activities,
     Account,
-    Profiles
+    Profiles,
+    Cities,
+    Users: {
+        list: () => requests.get<User[]>('/account/users')
+    }
 }
 
 export default agent;

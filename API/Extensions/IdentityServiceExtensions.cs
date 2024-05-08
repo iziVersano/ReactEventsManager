@@ -4,8 +4,12 @@ using Domain;
 using Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Persistence;
+using System.Threading.Tasks;
 
 namespace API.Extensions
 {
@@ -19,7 +23,11 @@ namespace API.Extensions
                 opt.Password.RequireNonAlphanumeric = false;
                 opt.User.RequireUniqueEmail = true;
             })
-            .AddEntityFrameworkStores<DataContext>();
+            .AddRoles<IdentityRole>() // Register roles
+            .AddEntityFrameworkStores<DataContext>()
+            .AddSignInManager<SignInManager<AppUser>>(); // Add this line
+
+            services.AddScoped<RoleManager<IdentityRole>>(); // Register RoleManager<IdentityRole>
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"]));
 
@@ -53,6 +61,11 @@ namespace API.Extensions
                 opt.AddPolicy("IsActivityHost", policy =>
                 {
                     policy.Requirements.Add(new IsHostRequirement());
+                });
+
+                opt.AddPolicy("AdminPolicy", policy =>
+                {
+                    policy.RequireRole("Admin");
                 });
             });
 
