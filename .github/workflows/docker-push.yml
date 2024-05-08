@@ -24,7 +24,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: yourusername/yourrepository:latest
+          tags: izi27surf/reacteventsmanager:latest
           # Include cache settings if you have implemented caching
 
   deploy:
