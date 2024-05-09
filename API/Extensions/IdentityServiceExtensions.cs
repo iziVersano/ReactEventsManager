@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using API.Services;
 using Domain;
@@ -15,9 +16,18 @@ namespace API.Extensions
 {
     public static class IdentityServiceExtensions
     {
-        public static IServiceCollection AddIdentityServices(this IServiceCollection services,
-            IConfiguration config)
+        public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration config)
         {
+            // Ensure that the TokenKey is available in the configuration
+            var tokenKey = config["TokenKey"];
+            if (string.IsNullOrEmpty(tokenKey))
+            {
+                // Log the error and throw an exception if the token key is missing
+                throw new InvalidOperationException("Security configuration failure: 'TokenKey' is not configured correctly.");
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey));
+
             services.AddIdentityCore<AppUser>(opt =>
             {
                 opt.Password.RequireNonAlphanumeric = false;
@@ -28,8 +38,6 @@ namespace API.Extensions
             .AddSignInManager<SignInManager<AppUser>>(); // Add this line
 
             services.AddScoped<RoleManager<IdentityRole>>(); // Register RoleManager<IdentityRole>
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"]));
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(opt =>
