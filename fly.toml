@@ -1,6 +1,6 @@
-# fly.toml file generated for reactivities-course on 2022-12-04T14:03:10+07:00
+# fly.toml file generated for Reactiveuers on 2022-12-04T14:03:10+07:00
 
-app = "reactivities-course"
+app = "Reactiveuers"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
