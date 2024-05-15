@@ -55,23 +55,32 @@ namespace API.Extensions
 
             if (environment == "Development")
             {
-            connStr = config.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrEmpty(connStr))
-                throw new InvalidOperationException("Development environment is missing the DefaultConnection string.");
+                connStr = config.GetConnectionString("DefaultConnection");
+                if (string.IsNullOrEmpty(connStr))
+                    throw new InvalidOperationException("Development environment is missing the DefaultConnection string.");
             }
             else
             {
-            // Attempt to fetch a direct connection string set for production
-            connStr = Environment.GetEnvironmentVariable("DATABASE_URL")
-                        ?? config["ConnectionStrings:DefaultConnection"];
+                // Use connection string provided at runtime by FlyIO.
+                var connUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
-            if (string.IsNullOrEmpty(connStr))
-                throw new InvalidOperationException("Production environment is missing the DATABASE_URL or DefaultConnection string.");
+                // Parse connection URL to connection string for Npgsql
+                connUrl = connUrl.Replace("postgres://", string.Empty);
+                var pgUserPass = connUrl.Split("@")[0];
+                var pgHostPortDb = connUrl.Split("@")[1];
+                var pgHostPort = pgHostPortDb.Split("/")[0];
+                var pgDb = pgHostPortDb.Split("/")[1];
+                var pgUser = pgUserPass.Split(":")[0];
+                var pgPass = pgUserPass.Split(":")[1];
+                var pgHost = pgHostPort.Split(":")[0];
+                var pgPort = pgHostPort.Split(":")[1];
+                var updatedHost = pgHost.Replace("flycast", "internal");
+
+                connStr = $"Server={updatedHost};Port={pgPort};User Id={pgUser};Password={pgPass};Database={pgDb};";
             }
 
             // Further parsing or validation of connStr could be added here if needed
             return connStr;
         }
-
     }
 }
